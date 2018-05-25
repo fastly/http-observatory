@@ -14,7 +14,7 @@ scanning = False
 def startScan():
     global scanning
 
-    host = request.args.get('host','financetimesblog.com')
+    host = request.args.get('host','observatory.mozilla.org')
     http_port = request.args.get('http_port','80')
     https_port = request.args.get('https_port','443')
     path = request.args.get('path','/')
@@ -30,24 +30,26 @@ def startScan():
     	return 'scanner busy'
     else:
     	scanning = True
-    
-    thr = threading.Thread(target=runScan, args=(host, http_port, https_port, path, verify, cookies, headers), kwargs={})
-    thr.start()
-    
-    return jsonify({'status':'scan started',
+    	
+    settings = {'status':'scan started',
     		'host': host,
     		'http_port': http_port,
     		'https_port': https_port,
     		'path': path,
     		'verify': verify,
     		'cookies': cookies,
-    		'headers': headers})
+    		'headers': headers}
+    print(settings)
+    
+    thr = threading.Thread(target=runScan, args=(host, http_port, https_port, path, verify, cookies, headers), kwargs={})
+    thr.start()
+    
+    return jsonify(settings)
 
 @app.route('/analyze', methods=['GET'])
 def getResults():
 	global scanning
 	global results
-
 	if scanning:
 		return 'still scanning'
 	return jsonify(results)
@@ -55,7 +57,6 @@ def getResults():
 @app.route('/status', methods=['GET'])
 def getStatus():
 	global status
-
 	return jsonify({'status':status})
     
 def runScan(host, http_port, https_port, path, verify, cookies, headers):
@@ -65,7 +66,7 @@ def runScan(host, http_port, https_port, path, verify, cookies, headers):
 	
 	results = ''
 	status = 'Running'
-	print(cookies)
+
 	results = scan(host,
          http_port=http_port,
          https_port=https_port,
@@ -74,6 +75,7 @@ def runScan(host, http_port, https_port, path, verify, cookies, headers):
          cookies=cookies,
          headers=headers)     
 	
+	print('scan finished')
 	status = 'Done'	
 	scanning = False
 
